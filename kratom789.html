@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>บันทึกยอดขายรายวัน</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<style>
+
+/* ฟอนต์หลัก */
+body {
+  font-family: 'Kanit', sans-serif;
+  background: linear-gradient(135deg, #d4fc79, #96e6a1);
+  margin: 0;
+  padding: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  color: #2f2f2f;
+}
+
+/* กล่องกลาง */
+form {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  width: 100%;
+  animation: fadeInUp 0.6s ease;
+}
+
+/* หัวเรื่อง */
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #2c7a4b;
+  font-size: 2rem;
+}
+
+p {
+  text-align: center;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+/* อินพุต */
+input {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  margin-bottom: 15px;
+  border: 1px solid #c4e0d4;
+  border-radius: 10px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.85);
+}
+
+input:focus {
+  outline: none;
+  border-color: #2ecc71;
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.5);
+}
+
+/* ปุ่ม */
+button {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+  color: white;
+  border: none;
+  padding: 14px;
+  width: 100%;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: linear-gradient(135deg, #27ae60, #1e8449);
+  box-shadow: 0 8px 15px rgba(39, 174, 96, 0.4);
+}
+
+/* สถานะ */
+#status {
+  text-align: center;
+  margin-top: 20px;
+  font-weight: 600;
+  color: #1e5631;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  body {
+    padding: 1rem;
+  }
+
+  form {
+    padding: 20px;
+  }
+
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #3f37c9;
+  --success-color: #4cc9f0;
+  --danger-color: #f72585;
+  --warning-color: #f8961e;
+  --light-color: #f8f9fa;
+  --dark-color: #212529;
+  --gray-color: #6c757d;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f5f7fa;
+  color: var(--dark-color);
+  line-height: 1.6;
+}
+
+.app-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.app-header {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+}
+
+.app-header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.current-date {
+  color: var(--gray-color);
+  font-size: 0.9rem;
+}
+
+.form-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: transform 0.3s ease;
+}
+
+.form-card:hover {
+  transform: translateY(-2px);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+}
+
+.card-header h2 {
+  font-size: 1.3rem;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--dark-color);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+}
+
+.output-box {
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.output-box.revenue {
+  background-color: rgba(76, 201, 240, 0.1);
+  color: var(--success-color);
+}
+
+.output-box.expense {
+  background-color: rgba(247, 37, 133, 0.1);
+  color: var(--danger-color);
+}
+
+.output-box.balance {
+  background-color: rgba(67, 97, 238, 0.1);
+  color: var(--primary-color);
+  font-size: 1.3rem;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 15px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.submit-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.action-btn.sheet-btn {
+  background-color: #e9ecef;
+  color: var(--dark-color);
+}
+
+.action-btn.sheet-btn:hover {
+  background-color: #dee2e6;
+}
+
+.action-btn.report-btn {
+  background-color: var(--warning-color);
+  color: white;
+}
+
+.action-btn.report-btn:hover {
+  background-color: #e07f0e;
+}
+
+.msg-box {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .app-container {
+    padding: 15px;
+  }
+  
+  .app-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .card-header h2 {
+    font-size: 1.1rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+}
+
+}
+
+</style>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1><i class="fas fa-chart-line"></i> บันทึกยอดขายรายวัน</h1>
+      <div class="current-date" id="currentDate"></div>
+    </header>
+
+    <form id="saleForm">
+      <div class="form-card">
+        <div class="card-header">
+          <i class="fas fa-shopping-cart"></i>
+          <h2>ข้อมูลการขาย</h2>
+        </div>
+        <div class="form-group">
+          <label for="date"><i class="far fa-calendar-alt"></i> วันที่</label>
+          <input type="date" id="date" required />
+        </div>
+        <div class="form-group">
+          <label for="sold"><i class="fas fa-wine-bottle"></i> จำนวนที่ขาย (ขวด)</label>
+          <input type="number" id="sold" min="0" value="0" />
+        </div>
+        <div class="form-group">
+          <label for="pending"><i class="fas fa-clock"></i> ค้างน้ำดิบ (ขวด)</label>
+          <input type="number" id="pending" min="0" value="0" />
+        </div>
+        <div class="form-group">
+          <label for="cleared"><i class="fas fa-check-circle"></i> เคลียร์ยอดค้างน้ำดิบ (ขวด)</label>
+          <input type="number" id="cleared" min="0" value="0" />
+        </div>
+        <div class="output-box revenue">
+          <span>รายรับ:</span>
+          <strong id="revenue">0</strong> บาท
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="card-header">
+          <i class="fas fa-money-bill-wave"></i>
+          <h2>รายการค่าใช้จ่าย</h2>
+        </div>
+        <div class="form-group">
+          <label for="pipeFee"><i class="fas fa-tools"></i> ค่าท่อม</label>
+          <input type="number" id="pipeFee" min="0" value="0" />
+        </div>
+        <div class="form-group">
+          <label for="shareFee"><i class="fas fa-handshake"></i> ค่าแชร์</label>
+          <input type="number" id="shareFee" min="0" value="100" />
+        </div>
+        <div class="form-group">
+          <label for="otherFee"><i class="fas fa-receipt"></i> ค่าใช้จ่ายอื่น</label>
+          <input type="number" id="otherFee" min="0" value="0" />
+        </div>
+        <div class="form-group">
+          <label for="saveFee"><i class="fas fa-piggy-bank"></i> เก็บออมเงิน</label>
+          <input type="number" id="saveFee" min="0" value="500" />
+        </div>
+        <div class="output-box expense">
+          <span>รายจ่าย:</span>
+          <strong id="expense">0</strong> บาท
+        </div>
+      </div>
+
+      <div class="form-card summary">
+        <div class="card-header">
+          <i class="fas fa-calculator"></i>
+          <h2>สรุปยอด</h2>
+        </div>
+        <div class="output-box balance">
+          <span>ยอดคงเหลือ:</span>
+          <strong id="balance">0</strong> บาท
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn">
+        <i class="fas fa-save"></i> บันทึกข้อมูล
+      </button>
+    </form>
+
+    <div class="action-buttons">
+      <button class="action-btn sheet-btn" onclick="window.open(sheetUrl, '_blank')">
+        <i class="fas fa-external-link-alt"></i> ดูประวัติในชีต
+      </button>
+      <button class="action-btn report-btn" onclick="alert('กำลังพัฒนาส่วนรายงานอัตโนมัติ')">
+        <i class="fas fa-chart-pie"></i> รายสัปดาห์/เดือน
+      </button>
+    </div>
+
+    <div id="msg" class="msg-box"></div>
+  </div>
+
+  <script src="script.js"></script>
+
+<script>
+
+const sheetUrl = 'https://docs.google.com/spreadsheets/d/11vhg37MbHRm53SSEHLsCI3EBXx5_meXVvlRuqhFteaY';
+const hookUrl = 'https://script.google.com/macros/s/AKfycbxXAaBlyCFRfdQa4jPk8YehSmXE07sn3tXg8kfdDGtDkMCSqRB4_DDIDiyit2tzDOSR/exec';
+const pricePerBottle = 40;
+
+// elements
+const sold = document.getElementById('sold');
+const pending = document.getElementById('pending');
+const cleared = document.getElementById('cleared');
+const revenueOut = document.getElementById('revenue');
+
+const pipeFee = document.getElementById('pipeFee');
+const shareFee = document.getElementById('shareFee');
+const otherFee = document.getElementById('otherFee');
+const saveFee = document.getElementById('saveFee');
+const expenseOut = document.getElementById('expense');
+
+const balanceOut = document.getElementById('balance');
+const form = document.getElementById('saleForm');
+const msg = document.getElementById('msg');
+const dateInput = document.getElementById('date');
+
+// auto set today
+dateInput.value = new Date().toISOString().substr(0, 10);
+
+function calcRevenue() {
+  const rev = (Number(sold.value) + Number(cleared.value) - Number(pending.value)) * pricePerBottle;
+  revenueOut.textContent = rev;
+  return rev;
+}
+function calcExpense() {
+  const exp = Number(pipeFee.value) + Number(shareFee.value) + Number(otherFee.value) + Number(saveFee.value);
+  expenseOut.textContent = exp;
+  return exp;
+}
+function calcBalance() {
+  const bal = calcRevenue() - calcExpense();
+  balanceOut.textContent = bal;
+  return bal;
+}
+
+// bind change
+[sold, pending, cleared].forEach(e => e.addEventListener('input', calcRevenue));
+[pipeFee, shareFee, otherFee, saveFee].forEach(e => e.addEventListener('input', calcExpense));
+[...[...[sold, pending, cleared], pipeFee, shareFee, otherFee, saveFee]].forEach(e => e.addEventListener('input', calcBalance));
+
+// submit
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  // validation
+  const d = dateInput.value;
+  if (!d) { msg.textContent = '❌ โปรดเลือกวันที่'; return; }
+  // prepare data
+  const payload = {
+    date: d,
+    sold: sold.value, pending: pending.value, cleared: cleared.value,
+    revenue: calcRevenue(),
+    pipeFee: pipeFee.value, shareFee: shareFee.value, otherFee: otherFee.value, saveFee: saveFee.value,
+    expense: calcExpense(), balance: calcBalance()
+  };
+  msg.textContent = '⏳ กำลังบันทึก...';
+  fetch(hookUrl, {
+    method: 'POST', mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    msg.textContent = '✅ บันทึกเรียบร้อย';
+    form.reset();
+    dateInput.value = new Date().toISOString().substr(0,10);
+    calcRevenue(); calcExpense(); calcBalance();
+  }).catch(() => {
+    msg.textContent = '❌ เกิดข้อผิดพลาด';
+  });
+});
+
+// initial calc
+calcRevenue(); calcExpense(); calcBalance();
+
+
+</script>
+</body>
+</html>
