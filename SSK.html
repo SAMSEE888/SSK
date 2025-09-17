@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="แอปพลิเคชันบันทึกยอดขายและคำนวณวัตถุดิบน้ำกระท่อม">
+  <title>SSKratomYMT - บันทึกยอดขาย, คำนวณ, และแดชบอร์ด</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <style>
+    :root {
+      --primary-color: #2E7D32;
+      --primary-light: #4CAF50;
+      --primary-lighter: #81C784;
+      --primary-dark: #1B5E20;
+      --accent-color: #8BC34A;
+      --background: #F1F8E9;
+      --card-bg: rgba(255, 255, 255, 0.9);
+      --text-dark: #263238;
+      --text-medium: #455A64;
+      --text-light: #607D8B;
+      --success-color: #388E3C;
+      --warning-color: #F57C00;
+      --error-color: #D32F2F;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+      --shadow-lg: 0 10px 20px rgba(0,0,0,0.1);
+      --border-radius: 12px;
+      --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Kanit', sans-serif;
+      background-color: var(--background);
+      color: var(--text-dark);
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      animation: fadeIn 0.5s ease-out;
+      flex: 1;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .app-header {
+      text-align: center;
+      margin-bottom: 20px;
+      color: var(--primary-dark);
+    }
+    
+    .app-header h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-weight: 600;
+    }
+    
+    .current-date {
+      color: var(--text-light);
+      font-size: 0.95rem;
+      font-weight: 300;
+    }
+    
+    /* แท็บเมนู */
+    .tab-menu {
+      display: flex;
+      flex-wrap: wrap;
+      margin-bottom: 25px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .tab-btn {
+      padding: 12px 20px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text-medium);
+      transition: var(--transition);
+      position: relative;
+      margin-right: 5px;
+      border-radius: 8px 8px 0 0;
+    }
+    
+    .tab-btn:hover {
+      background-color: rgba(76, 175, 80, 0.1);
+    }
+    
+    .tab-btn.active {
+      color: var(--primary-dark);
+      background-color: rgba(76, 175, 80, 0.2);
+    }
+    
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background-color: var(--primary-color);
+    }
+    
+    .tab-content {
+      display: none;
+    }
+    
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+    
+    /* สไตล์ส่วนฟอร์มบันทึกยอดขาย */
+    .form-card, .material-calculator, .dashboard-container {
+      background: var(--card-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      padding: 25px;
+      margin-bottom: 25px;
+      transition: var(--transition);
+      border-top: 4px solid var(--primary-light);
+    }
+    
+    .form-card:hover, .material-calculator:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      color: var(--primary-dark);
+    }
+    
+    .card-header h2, .card-header h3 {
+      font-size: 1.4rem;
+      font-weight: 500;
+    }
+    
+    .card-header i {
+      font-size: 1.2rem;
+      color: var(--primary-light);
+    }
+    
+    .form-group {
+      margin-bottom: 18px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 400;
+      color: var(--text-medium);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+    
+    .form-group i {
+      color: var(--primary-light);
+      width: 20px;
+      text-align: center;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+      background-color: white;
+      font-family: 'Kanit', sans-serif;
+    }
+    
+    .form-group input:focus {
+      border-color: var(--primary-light);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+    }
+    
+    .output-box {
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.7);
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    
+    .output-box:hover {
+      box-shadow: var(--shadow-md);
+    }
+    
+    .output-box.revenue {
+      border-left: 4px solid var(--success-color);
+      color: var(--success-color);
+    }
+    
+    .output-box.expense {
+      border-left: 4px solid var(--warning-color);
+      color: var(--warning-color);
+    }
+    
+    .output-box.balance {
+      border-left: 4px solid var(--primary-color);
+      color: var(--primary-color);
+      font-size: 1.3rem;
+      font-weight: 500;
+      background-color: rgba(139, 195, 74, 0.1);
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary-light), var(--primary-dark));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .submit-btn:hover {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    
+    .submit-btn:active {
+      transform: translateY(0);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+    }
+    
+    .action-btn {
+      flex: 1;
+      padding: 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .action-btn:active {
+      transform: translateY(0);
+    }
+    
+    .action-btn.sheet-btn {
+      background-color: white;
+      color: var(--text-medium);
+      border: 1px solid #e0e0e0;
+    }
+    
+    .action-btn.sheet-btn:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .action-btn.report-btn {
+      background-color: var(--accent-color);
+      color: white;
+    }
+    
+    .action-btn.report-btn:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .msg-box {
+      margin-top: 25px;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+      font-weight: 500;
+      background-color: rgba(255, 255, 255, 0.8);
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      min-width: 250px;
+      display: none; /* ซ่อนไว้เริ่มต้น */
+    }
+    
+    .msg-box.success {
+      background-color: rgba(56, 142, 60, 0.9);
+      color: white;
+    }
+    
+    .msg-box.error {
+      background-color: rgba(211, 47, 47, 0.9);
+      color: white;
+    }
+    
+    .msg-box.loading {
+      background-color: rgba(251, 192, 45, 0.9);
+      color: var(--text-dark);
+    }
+    
+    /* สไตล์ส่วนคำนวณวัตถุดิบ */
+    .material-calculator {
+      border-top: 4px solid var(--accent-color);
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+    }
+    
+    .input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--text-medium);
+    }
+    
+    .input-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+      background-color: white;
+    }
+    
+    .input-group input:focus {
+      border-color: var(--accent-color);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(139, 195, 74, 0.2);
+    }
+    
+    .calc-buttons {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .calc-btn {
+      flex: 1;
+      padding: 14px;
+      background-color: var(--primary-light);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .calc-btn:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .calc-btn.reset {
+      background-color: #f5f5f5;
+      color: var(--text-medium);
+    }
+    
+    .calc-btn.reset:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .result-section {
+      margin-top: 30px;
+    }
+    
+    .result-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: var(--shadow-sm);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+    }
+    
+    .result-table th, .result-table td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .result-table th {
+      background-color: var(--primary-light);
+      color: white;
+      font-weight: 500;
+    }
+    
+    .result-table tr:nth-child(even) {
+      background-color: rgba(139, 195, 74, 0.05);
+    }
+    
+    .result-table tr:hover {
+      background-color: rgba(139, 195, 74, 0.1);
+    }
+    
+    .result-value {
+      font-weight: 500;
+      color: var(--primary-dark);
+    }
+
+    /* สไตล์สำหรับแดชบอร์ด */
+    .dashboard-container {
+        border-top: 4px solid var(--primary-color);
+        padding: 1.5rem;
+    }
+
+    .kpi-container {
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    @media (min-width: 640px) {
+        .kpi-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (min-width: 1024px) {
+        .kpi-container {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+    .kpi-card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+    .kpi-card:hover {
+        transform: translateY(-0.25rem);
+    }
+    .kpi-card .label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #607D8B;
+    }
+    .kpi-card .value {
+        font-size: 2rem;
+        font-weight: 600;
+        color: #263238;
+        margin-top: 0.25rem;
+    }
+
+    .chart-container {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (min-width: 1024px) {
+      .chart-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .chart-card {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    .chart-card h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #263238;
+        margin-bottom: 1rem;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+    @media (max-width: 768px) {
+        .chart-wrapper {
+            height: 250px;
+        }
+    }
+    @media (max-width: 480px) {
+        .chart-wrapper {
+            height: 220px;
+        }
+        .chart-card h2 {
+            font-size: 1.1rem;
+        }
+    }
+
+    .history-table-container {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+    }
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .history-table th, .history-table td {
+        padding: 0.75rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+        white-space: nowrap;
+    }
+    .history-table thead {
+        background-color: #f1f8e9;
+    }
+    .history-table th {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #455a64;
+        text-transform: uppercase;
+    }
+    .history-table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      
+      .app-header h1 {
+        font-size: 1.6rem;
+      }
+      
+      .card-header h2 {
+        font-size: 1.2rem;
+      }
+      
+      .action-buttons, .calc-buttons {
+        flex-direction: column;
+      }
+      
+      .form-card, .material-calculator {
+        padding: 20px;
+      }
+      
+      .tab-menu {
+        justify-content: space-around;
+      }
+      
+      .tab-btn {
+        flex-grow: 1;
+        text-align: center;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        margin-right: 0;
+      }
+      
+      .tab-btn.active::after {
+        display: none;
+      }
+    
+      .dashboard-container {
+        padding: 1rem;
+      }
+
+      .kpi-card {
+        padding: 1rem;
+      }
+
+      .kpi-card .value {
+        font-size: 1.5rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .app-header h1 {
+        font-size: 1.4rem;
+      }
+      
+      .form-group input, .input-group input {
+        padding: 12px 14px;
+      }
+      
+      .output-box {
+        font-size: 1rem;
+      }
+      
+      .output-box.balance {
+        font-size: 1.1rem;
+      }
+      
+      .result-table th, .result-table td {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+      }
+
+      .history-table th, 
+      .history-table td {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+      }
+    }
+    
+    .app-footer {
+      text-align: center;
+      margin-top: 18px;
+      color: var(--text-light);
+      font-size: 0.9rem;
+      padding: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1><i class="fas fa-leaf"></i> SSKratomYMT</h1>
+      <div class="current-date" id="currentDate"></div>
+    </header>
+
+    <div class="tab-menu">
+      <button class="tab-btn active" data-tab="sales-tab">
+        <i class="fas fa-chart-line"></i> บันทึกยอดขาย
+      </button>
+      <button class="tab-btn" data-tab="material-tab">
+        <i class="fas fa-calculator"></i> คำนวณวัตถุดิบ
+      </button>
+      <button class="tab-btn" data-tab="dashboard-tab">
+        <i class="fas fa-chart-pie"></i> แดชบอร์ด
+      </button>
+    </div>
+
+    <div id="sales-tab" class="tab-content active">
+      <form id="saleForm">
+        <div class="form-card">
+          <div class="card-header">
+            <i class="fas fa-shopping-cart"></i>
+            <h2>ข้อมูลการขาย</h2>
+          </div>
+          <div class="form-group">
+            <label for="date"><i class="far fa-calendar-alt"></i> วันที่</label>
+            <input type="date" id="date" required>
+          </div>
+          <div class="form-group">
+            <label for="sold"><i class="fas fa-wine-bottle"></i> จำนวนที่ขาย (ขวด)</label>
+            <input type="number" id="sold" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="pending"><i class="fas fa-clock"></i> ค้างน้ำดิบ (ขวด)</label>
+            <input type="number" id="pending" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="cleared"><i class="fas fa-check-circle"></i> เคลียร์ยอดค้างน้ำดิบ (ขวด)</label>
+            <input type="number" id="cleared" min="0" value="0">
+          </div>
+          <div class="output-box revenue">
+            <span>รายรับ:</span>
+            <strong id="revenue">0</strong> บาท
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="card-header">
+            <i class="fas fa-money-bill-wave"></i>
+            <h2>รายการค่าใช้จ่าย</h2>
+          </div>
+          <div class="form-group">
+            <label for="pipeFee"><i class="fas fa-tools"></i> ค่าท่อม</label>
+            <input type="number" id="pipeFee" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="shareFee"><i class="fas fa-handshake"></i> ค่าแชร์</label>
+            <input type="number" id="shareFee" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="otherFee"><i class="fas fa-receipt"></i> ค่าใช้จ่ายอื่น</label>
+            <input type="number" id="otherFee" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="saveFee"><i class="fas fa-piggy-bank"></i> เก็บออมเงิน</label>
+            <input type="number" id="saveFee" min="0" value="500">
+          </div>
+          <div class="output-box expense">
+            <span>รายจ่าย:</span>
+            <strong id="expense">600</strong> บาท
+          </div>
+        </div>
+        <div class="form-card summary">
+          <div class="card-header">
+            <i class="fas fa-calculator"></i>
+            <h2>สรุปยอด</h2>
+          </div>
+          <div class="output-box balance">
+            <span>ยอดคงเหลือ:</span>
+            <strong id="balance">-600</strong> บาท
+          </div>
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">
+          <i class="fas fa-save"></i> บันทึกข้อมูล
+        </button>
+      </form>
+      <div class="action-buttons">
+        <button class="action-btn sheet-btn" id="sheetBtn">
+          <i class="fas fa-external-link-alt"></i> ดูประวัติในชีต
+        </button>
+        <button class="action-btn report-btn" id="reportBtn">
+          <i class="fas fa-chart-pie"></i> ไปที่แดชบอร์ด
+        </button>
+      </div>
+    </div>
+
+    <div id="material-tab" class="tab-content">
+      <div class="material-calculator">
+        <div class="card-header">
+          <i class="fas fa-leaf"></i>
+          <h2>คำนวณวัตถุดิบผลิตน้ำกระท่อม</h2>
+        </div>
+        <p style="margin-bottom: 20px; color: var(--text-medium);">กรอกข้อมูลอย่างน้อยหนึ่งช่องเพื่อคำนวณ</p>
+        <div class="input-group">
+          <label for="leafInput"><i class="fas fa-leaf"></i> จำนวนใบกระท่อม (กิโลกรัม)</label>
+          <input type="number" id="leafInput" min="0" placeholder="กรอกจำนวนใบกระท่อม">
+        </div>
+        <div class="input-group">
+          <label for="waterInput"><i class="fas fa-tint"></i> จำนวนน้ำ (ลิตร)</label>
+          <input type="number" id="waterInput" min="0" placeholder="กรอกจำนวนน้ำ">
+        </div>
+        <div class="input-group">
+          <label for="yieldInput"><i class="fas fa-wine-bottle"></i> จำนวนน้ำกระท่อมดิบที่ต้องการ (ลิตร)</label>
+          <input type="number" id="yieldInput" min="0" placeholder="กรอกจำนวนน้ำกระท่อมที่ต้องการ">
+        </div>
+        <div class="calc-buttons">
+          <button id="calculateButton" class="calc-btn">
+            <i class="fas fa-calculator"></i> คำนวณ
+          </button>
+          <button id="resetButton" class="calc-btn reset">
+            <i class="fas fa-redo"></i> รีเซ็ต
+          </button>
+        </div>
+        <div class="result-section" id="resultContainer" style="display: none;">
+          <div class="card-header">
+            <i class="fas fa-chart-bar"></i>
+            <h3>ผลลัพธ์การคำนวณ</h3>
+          </div>
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>วิธีการผลิต</th>
+                <th>ใบกระท่อม (กก.)</th>
+                <th>น้ำ (ลิตร)</th>
+                <th>น้ำกระท่อมดิบ (ลิตร)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>วิธีบดใบกระท่อม</strong></td>
+                <td class="result-value" id="resultGroundLeaf">0.00</td>
+                <td class="result-value" id="resultGroundWater">0.00</td>
+                <td class="result-value" id="resultGroundYield">0.00</td>
+              </tr>
+              <tr>
+                <td><strong>วิธีไม่บดใบ (0.65)</strong></td>
+                <td class="result-value" id="resultNotGroundLeaf1">0.00</td>
+                <td class="result-value" id="resultNotGroundWater1">0.00</td>
+                <td class="result-value" id="resultNotGroundYield1">0.00</td>
+              </tr>
+              <tr>
+                <td><strong>วิธีไม่บดใบ (0.63)</strong></td>
+                <td class="result-value" id="resultNotGroundLeaf2">0.00</td>
+                <td class="result-value" id="resultNotGroundWater2">0.00</td>
+                <td class="result-value" id="resultNotGroundYield2">0.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <div id="dashboard-tab" class="tab-content">
+      <div class="dashboard-container">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">แดชบอร์ดวิเคราะห์การขาย</h1>
+          <div class="flex space-x-2 sm:space-x-4">
+            <select id="date-range-filter" class="w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+              <option value="last30">30 วันล่าสุด</option>
+              <option value="last7">7 วันล่าสุด</option>
+              <option value="all">ทั้งหมด</option>
+            </select>
+            <button id="refresh-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-full shadow-lg transition-colors duration-200 flex items-center gap-2">
+              <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">อัปเดต</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="kpi-container" class="kpi-container">
+          </div>
+
+        <div class="chart-container">
+          <div class="chart-card">
+            <h2>ประสิทธิภาพการขาย (6 เดือนล่าสุด)</h2>
+            <div class="chart-wrapper">
+              <canvas id="salesChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h2>รายได้ vs กำไร (6 เดือนล่าสุด)</h2>
+            <div class="chart-wrapper">
+              <canvas id="profitChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="history-table-container">
+          <h2>ประวัติการขายล่าสุด</h2>
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>วันที่</th>
+                <th>ขายแล้ว (ขวด)</th>
+                <th>รายได้ (฿)</th>
+                <th>ค่าใช้จ่าย (฿)</th>
+                <th>กำไร (฿)</th>
+                <th>ยอดคงเหลือ (฿)</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="msg" class="msg-box"></div>
+
+  <footer class="app-footer">
+    # • SSKratom-YMT • ส.สามสี • #
+  </footer>
+
+  <script>
+    // Register Chart.js Datalabels plugin
+    Chart.register(ChartDataLabels);
+
+    const sheetId = '11vhg3yMbHRm53SSEHLsCI3EBXx5_meXVvlRuqhFteaY';
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetId}`;
+    
+    // =================================================================
+    // !!! สำคัญ: แก้ไข WEB APP URL ตรงนี้ !!!
+    // =================================================================
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbw7F4--_tF15bVIvOcyOLp72QPjEKlslUp4w1QKM0uIfjMtpJHO1y0vBMttcBOL0XKb/exec'; // <--- วาง URL ที่คัดลอกมาตรงนี้
+
+    const pricePerBottle = 40;
+
+    // --- Global Elements ---
+    const msg = document.getElementById('msg');
+
+    // --- Sales Form Elements & Logic ---
+    const sold = document.getElementById('sold');
+    const pending = document.getElementById('pending');
+    const cleared = document.getElementById('cleared');
+    const revenueOut = document.getElementById('revenue');
+    const pipeFee = document.getElementById('pipeFee');
+    const shareFee = document.getElementById('shareFee');
+    const otherFee = document.getElementById('otherFee');
+    const saveFee = document.getElementById('saveFee');
+    const expenseOut = document.getElementById('expense');
+    const balanceOut = document.getElementById('balance');
+    const form = document.getElementById('saleForm');
+    const dateInput = document.getElementById('date');
+    const sheetBtn = document.getElementById('sheetBtn');
+    const reportBtn = document.getElementById('reportBtn');
+    const submitBtn = document.getElementById('submitBtn');
+
+    function calcRevenue() {
+      const rev = (Number(sold.value) + Number(cleared.value) - Number(pending.value)) * pricePerBottle;
+      revenueOut.textContent = rev.toLocaleString();
+      return rev;
+    }
+
+    function calcExpense() {
+      const exp = Number(pipeFee.value) + Number(shareFee.value) + Number(otherFee.value) + Number(saveFee.value);
+      expenseOut.textContent = exp.toLocaleString();
+      return exp;
+    }
+
+    function calcBalance() {
+      const bal = calcRevenue() - calcExpense();
+      balanceOut.textContent = bal.toLocaleString();
+    }
+    
+    function setupSalesForm() {
+      dateInput.value = new Date().toISOString().substr(0, 10);
+      [sold, pending, cleared, pipeFee, shareFee, otherFee, saveFee].forEach(el => {
+        el.addEventListener('input', () => {
+          calcRevenue();
+          calcExpense();
+          calcBalance();
+        });
+      });
+
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        if (!dateInput.value) {
+          showMessage('❌ โปรดเลือกวันที่', 'error');
+          return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
+        
+        const payload = {
+          date: dateInput.value,
+          sold: sold.value, 
+          pending: pending.value, 
+          cleared: cleared.value,
+          revenue: calcRevenue(),
+          pipeFee: pipeFee.value, 
+          shareFee: shareFee.value, 
+          otherFee: otherFee.value, 
+          saveFee: saveFee.value,
+          expense: calcExpense(), 
+          balance: calcRevenue() - calcExpense()
+        };
+        
+        fetch(webAppUrl, {
+          method: 'POST', 
+          body: JSON.stringify(payload),
+          headers: { 'Content-Type': 'application/json' },
+          mode: 'no-cors' // Use no-cors for simple POST to GAS
+        })
+        .then(() => {
+          showMessage('✅ บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+          form.reset();
+          dateInput.value = new Date().toISOString().substr(0, 10);
+          calcRevenue(); 
+          calcExpense(); 
+          calcBalance();
+        })
+        .catch(error => {
+          console.error('Submit Error:', error);
+          showMessage('❌ เกิดข้อผิดพลาดในการบันทึก', 'error');
+        })
+        .finally(() => {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-save"></i> บันทึกข้อมูล';
+        });
+      });
+
+      calcBalance(); // Initial calculation
+    }
+
+    // --- Material Calculator Logic ---
+    function setupMaterialCalculator() {
+        const leafInput = document.getElementById('leafInput');
+        const waterInput = document.getElementById('waterInput');
+        const yieldInput = document.getElementById('yieldInput');
+        const calculateButton = document.getElementById('calculateButton');
+        const resetButton = document.getElementById('resetButton');
+        const resultContainer = document.getElementById('resultContainer');
+        
+        const results = {
+            groundLeaf: document.getElementById('resultGroundLeaf'),
+            groundWater: document.getElementById('resultGroundWater'),
+            groundYield: document.getElementById('resultGroundYield'),
+            notGroundLeaf1: document.getElementById('resultNotGroundLeaf1'),
+            notGroundWater1: document.getElementById('resultNotGroundWater1'),
+            notGroundYield1: document.getElementById('resultNotGroundYield1'),
+            notGroundLeaf2: document.getElementById('resultNotGroundLeaf2'),
+            notGroundWater2: document.getElementById('resultNotGroundWater2'),
+            notGroundYield2: document.getElementById('resultNotGroundYield2')
+        };
+        
+        calculateButton.addEventListener('click', () => {
+            const leaf = parseFloat(leafInput.value) || 0;
+            const water = parseFloat(waterInput.value) || 0;
+            const yieldDesired = parseFloat(yieldInput.value) || 0;
+            
+            if (leaf === 0 && water === 0 && yieldDesired === 0) {
+                showMessage('⚠️ กรุณากรอกข้อมูลอย่างน้อยหนึ่งช่อง', 'error');
+                return;
+            }
+            
+            const ratios = {
+                ground: { leafToWater: 20, waterToYield: 15 / 20 },
+                notGround1: { leafToWater: 15.38, waterToYield: 12 / 15.38 },
+                notGround2: { leafToWater: 15.87302, waterToYield: 12 / 15.87302 }
+            };
+
+            let calc = {};
+            if (leaf > 0) {
+                calc.ground = { l: leaf, w: leaf * ratios.ground.leafToWater, y: leaf * ratios.ground.leafToWater * ratios.ground.waterToYield };
+                calc.notGround1 = { l: leaf, w: leaf * ratios.notGround1.leafToWater, y: leaf * ratios.notGround1.leafToWater * ratios.notGround1.waterToYield };
+                calc.notGround2 = { l: leaf, w: leaf * ratios.notGround2.leafToWater, y: leaf * ratios.notGround2.leafToWater * ratios.notGround2.waterToYield };
+            } else if (water > 0) {
+                calc.ground = { l: water / ratios.ground.leafToWater, w: water, y: water * ratios.ground.waterToYield };
+                calc.notGround1 = { l: water / ratios.notGround1.leafToWater, w: water, y: water * ratios.notGround1.waterToYield };
+                calc.notGround2 = { l: water / ratios.notGround2.leafToWater, w: water, y: water * ratios.notGround2.waterToYield };
+            } else if (yieldDesired > 0) {
+                calc.ground = { y: yieldDesired, w: yieldDesired / ratios.ground.waterToYield, l: (yieldDesired / ratios.ground.waterToYield) / ratios.ground.leafToWater };
+                calc.notGround1 = { y: yieldDesired, w: yieldDesired / ratios.notGround1.waterToYield, l: (yieldDesired / ratios.notGround1.waterToYield) / ratios.notGround1.leafToWater };
+                calc.notGround2 = { y: yieldDesired, w: yieldDesired / ratios.notGround2.waterToYield, l: (yieldDesired / ratios.notGround2.waterToYield) / ratios.notGround2.leafToWater };
+            }
+
+            results.groundLeaf.textContent = calc.ground.l.toFixed(2);
+            results.groundWater.textContent = calc.ground.w.toFixed(2);
+            results.groundYield.textContent = calc.ground.y.toFixed(2);
+            results.notGroundLeaf1.textContent = calc.notGround1.l.toFixed(2);
+            results.notGroundWater1.textContent = calc.notGround1.w.toFixed(2);
+            results.notGroundYield1.textContent = calc.notGround1.y.toFixed(2);
+            results.notGroundLeaf2.textContent = calc.notGround2.l.toFixed(2);
+            results.notGroundWater2.textContent = calc.notGround2.w.toFixed(2);
+            results.notGroundYield2.textContent = calc.notGround2.y.toFixed(2);
+            
+            resultContainer.style.display = 'block';
+            showMessage('✅ คำนวณเรียบร้อย', 'success');
+        });
+        
+        resetButton.addEventListener('click', () => {
+            leafInput.value = '';
+            waterInput.value = '';
+            yieldInput.value = '';
+            resultContainer.style.display = 'none';
+            showMessage('♻️ รีเซ็ตฟอร์มแล้ว', 'success');
+        });
+    }
+
+    // --- Dashboard Elements & Logic ---
+    const kpiContainer = document.getElementById('kpi-container');
+    const historyTableBody = document.getElementById('history-table-body');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const dateRangeFilter = document.getElementById('date-range-filter');
+    let salesChartInstance = null;
+    let profitChartInstance = null;
+    
+    function fetchDataAndRender() {
+      if (webAppUrl === 'YOUR_WEB_APP_URL_HERE') {
+        showMessage('🚨 กรุณาตั้งค่า Web App URL ในไฟล์ HTML ก่อน', 'error');
+        kpiContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">ยังไม่ได้ตั้งค่า Web App URL!</p>`;
+        return;
+      }
+
+      showMessage('⏳ กำลังโหลดข้อมูล...', 'loading');
+      refreshBtn.querySelector('i').classList.add('fa-spin');
+      
+      const requestUrl = `${webAppUrl}?action=getDashboardData&range=${dateRangeFilter.value}`;
+
+      fetch(requestUrl)
+        .then(response => {
+          if (!response.ok) throw new Error(`Network response was not ok: ${response.statusText}`);
+          return response.json();
+        })
+        .then(data => {
+          if (data.error) throw new Error(data.error);
+          renderDashboard(data);
+          showMessage('✅ โหลดข้อมูลสำเร็จ', 'success');
+        })
+        .catch(error => {
+          console.error('Fetch Error:', error);
+          showMessage(`❌ เกิดข้อผิดพลาด: ${error.message}`, 'error');
+          kpiContainer.innerHTML = `<p class="text-center text-red-500 col-span-full">ไม่สามารถโหลดข้อมูลได้</p>`;
+        })
+        .finally(() => {
+          refreshBtn.querySelector('i').classList.remove('fa-spin');
+        });
+    }
+
+    function renderDashboard(data) {
+        if (!data.kpi) {
+            kpiContainer.innerHTML = `<p class="col-span-full text-center text-gray-500">ไม่พบข้อมูลการขาย</p>`;
+            historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่มีประวัติการขาย</td></tr>`;
+            if (salesChartInstance) salesChartInstance.destroy();
+            if (profitChartInstance) profitChartInstance.destroy();
+            return;
+        }
+
+        renderKPIs(data.kpi);
+        renderSalesChart(data.chartData.salesChart);
+        renderProfitChart(data.chartData.profitChart);
+        renderHistoryTable(data.historyData);
+    }
+    
+    function renderKPIs(kpiData) {
+      const formatCurrency = (value) => `฿${Number(value).toLocaleString()}`;
+      const kpis = [
+        { label: 'ยอดขายทั้งหมด (ขวด)', value: kpiData.sold.toLocaleString() },
+        { label: 'รายได้ทั้งหมด', value: formatCurrency(kpiData.revenue) },
+        { label: 'กำไรทั้งหมด', value: formatCurrency(kpiData.profit) },
+        { label: 'ยอดคงเหลือล่าสุด', value: formatCurrency(kpiData.balance) }
+      ];
+
+      kpiContainer.innerHTML = kpis.map(kpi => `
+        <div class="kpi-card">
+          <div class="label">${kpi.label}</div>
+          <div class="value">${kpi.value}</div>
+        </div>
+      `).join('');
+    }
+
+    function renderSalesChart(chartData) {
+      if (salesChartInstance) salesChartInstance.destroy();
+      const isMobile = window.innerWidth < 768;
+      salesChartInstance = new Chart(document.getElementById('salesChart'), {
+        type: 'line',
+        data: {
+          labels: chartData.periods,
+          datasets: [{
+            label: 'จำนวนที่ขายได้',
+            data: chartData.currentData,
+            borderColor: '#4CAF50',
+            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+            tension: 0.3,
+            fill: true,
+          }]
+        },
+        options: getChartOptions('จำนวน (ขวด)', 'เดือน', isMobile)
+      });
+    }
+
+    function renderProfitChart(chartData) {
+      if (profitChartInstance) profitChartInstance.destroy();
+      const isMobile = window.innerWidth < 768;
+      profitChartInstance = new Chart(document.getElementById('profitChart'), {
+        type: 'bar',
+        data: {
+          labels: chartData.periods,
+          datasets: [
+            { label: 'รายได้', data: chartData.revenueData, backgroundColor: '#4CAF50' },
+            { label: 'กำไร', data: chartData.profitData, backgroundColor: '#8BC34A' }
+          ]
+        },
+        options: getChartOptions('จำนวนเงิน (฿)', 'เดือน', isMobile, true)
+      });
+    }
+
+    function getChartOptions(yLabel, xLabel, isMobile, isCurrency = false) {
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: { display: !isMobile, text: yLabel },
+                    ticks: { callback: value => isCurrency ? `฿${value/1000}k` : value }
+                },
+                x: { title: { display: !isMobile, text: xLabel } }
+            },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: {
+                    callbacks: {
+                        label: context => `${context.dataset.label}: ${isCurrency ? '฿' : ''}${Number(context.parsed.y).toLocaleString()}`
+                    }
+                },
+                datalabels: { display: false }
+            }
+        };
+    }
+
+    function renderHistoryTable(historyData) {
+      if (historyData.length === 0) {
+        historyTableBody.innerHTML = `<tr><td colspan="6" class="text-center p-4">ไม่มีประวัติการขาย</td></tr>`;
+        return;
+      }
+      historyTableBody.innerHTML = historyData.map(row => `
+        <tr>
+          <td>${row.date}</td>
+          <td>${row.sold}</td>
+          <td>฿${row.revenue.toLocaleString()}</td>
+          <td>฿${row.fees.toLocaleString()}</td>
+          <td>฿${row.profit.toLocaleString()}</td>
+          <td>฿${row.balance.toLocaleString()}</td>
+        </tr>
+      `).join('');
+    }
+    
+    // --- General & Initial Setup ---
+    function showMessage(message, type) {
+      msg.textContent = message;
+      msg.className = 'msg-box ' + type;
+      msg.style.display = 'block';
+      setTimeout(() => { msg.style.display = 'none'; }, 3000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const currentDateElement = document.getElementById('currentDate');
+      currentDateElement.textContent = new Date().toLocaleDateString('th-TH', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+      });
+
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      function activateTab(tabId) {
+        tabContents.forEach(content => content.classList.remove('active'));
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+        
+        document.getElementById(tabId).classList.add('active');
+        document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add('active');
+        
+        if (tabId === 'dashboard-tab' && !kpiContainer.innerHTML.includes('kpi-card')) {
+          fetchDataAndRender();
+        }
+      }
+
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => activateTab(btn.getAttribute('data-tab')));
+      });
+      
+      sheetBtn.addEventListener('click', () => window.open(sheetUrl, '_blank'));
+      reportBtn.addEventListener('click', () => activateTab('dashboard-tab'));
+      refreshBtn.addEventListener('click', fetchDataAndRender);
+      dateRangeFilter.addEventListener('change', fetchDataAndRender);
+
+      setupSalesForm();
+      setupMaterialCalculator();
+    });
+  </script>
+</body>
+</html>
