@@ -1,0 +1,8 @@
+/* style.css - minimal extracted styles */
+:root{--primary-color:#2E7D32;--background:#F1F8E9;--card-bg:rgba(255,255,255,0.9);--text-dark:#263238}
+body{font-family:'Kanit',sans-serif;background:var(--background);color:var(--text-dark);padding:20px}
+.app-container{max-width:1100px;margin:0 auto}
+.tab-menu{display:flex;gap:8px;margin-bottom:16px}
+.tab-btn{padding:8px 12px;border-radius:8px;border:none;background:#fff}
+.form-card{background:var(--card-bg);padding:16px;border-radius:12px;margin-bottom:12px}
+.submit-btn{padding:12px;border-radius:8px;background:#2E7D32;color:#fff;border:none}
